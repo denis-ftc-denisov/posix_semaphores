@@ -14,6 +14,9 @@ static zend_function_entry posix_semaphores_functions[] = {
 	PHP_FE(posix_sem_open, NULL)
 	PHP_FE(posix_sem_close, NULL)
 	PHP_FE(posix_sem_unlink, NULL)
+	PHP_FE(posix_sem_getvalue, NULL)
+	PHP_FE(posix_sem_post, NULL)
+	PHP_FE(posix_sem_wait, NULL)
 	{NULL, NULL, NULL}
 };
     
@@ -43,6 +46,7 @@ zend_module_entry posix_semaphores_module_entry = {
 typedef struct _php_posix_semaphore {
 	sem_t *sem;
 } php_posix_semaphore;
+
 
 static void php_posix_semaphore_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 {
@@ -135,3 +139,86 @@ PHP_FUNCTION(posix_sem_unlink)
 	}
 	RETURN_TRUE;
 }
+
+PHP_FUNCTION(posix_sem_getvalue)
+{
+	php_posix_semaphore *semaphore;
+	zval *zsemaphore;
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zsemaphore) == FAILURE)
+	{
+		RETURN_NULL();
+	}
+	
+	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	if (semaphore->sem)
+	{
+		int value;
+		if (sem_getvalue(semaphore->sem, &value) == -1)
+		{
+			RETURN_NULL();
+		}
+		else
+		{
+			RETURN_LONG(value);
+		}
+	}
+	else
+	{
+		RETURN_NULL();
+	}
+}
+
+PHP_FUNCTION(posix_sem_post)
+{
+	php_posix_semaphore *semaphore;
+	zval *zsemaphore;
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zsemaphore) == FAILURE)
+	{
+		RETURN_FALSE;
+	}
+	
+	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	if (semaphore->sem)
+	{
+		if (sem_post(semaphore->sem) == -1)
+		{
+			RETURN_FALSE;
+		}
+		else
+		{
+			RETURN_TRUE;
+		}
+	}
+	else
+	{
+		RETURN_FALSE;
+	}
+}
+
+PHP_FUNCTION(posix_sem_wait)
+{
+	php_posix_semaphore *semaphore;
+	zval *zsemaphore;
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zsemaphore) == FAILURE)
+	{
+		RETURN_FALSE;
+	}
+	
+	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	if (semaphore->sem)
+	{
+		if (sem_wait(semaphore->sem) == -1)
+		{
+			RETURN_FALSE;
+		}
+		else
+		{
+			RETURN_TRUE;
+		}
+	}
+	else
+	{
+		RETURN_FALSE;
+	}
+}
+
