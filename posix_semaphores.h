@@ -13,6 +13,9 @@ PHP_FUNCTION(posix_sem_unlink);
 PHP_FUNCTION(posix_sem_getvalue);
 PHP_FUNCTION(posix_sem_post);
 PHP_FUNCTION(posix_sem_wait);
+PHP_FUNCTION(posix_sem_trywait);
+PHP_FUNCTION(posix_sem_timedwait);
+PHP_FUNCTION(posix_sem_error);
 
 extern zend_module_entry posix_semaphores_module_entry;
 #define phpext_posix_semaphores_ptr &posix_semaphores_module_entry;

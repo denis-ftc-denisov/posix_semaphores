@@ -17,6 +17,9 @@ static zend_function_entry posix_semaphores_functions[] = {
 	PHP_FE(posix_sem_getvalue, NULL)
 	PHP_FE(posix_sem_post, NULL)
 	PHP_FE(posix_sem_wait, NULL)
+	PHP_FE(posix_sem_trywait, NULL)
+	PHP_FE(posix_sem_timedwait, NULL)
+	PHP_FE(posix_sem_error, NULL)
 	{NULL, NULL, NULL}
 };
     
@@ -58,6 +61,7 @@ static void php_posix_semaphore_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 			sem_close(s->sem);
 			s->sem = NULL;
 		}
+		efree(s);
 	}
 }
 
@@ -66,9 +70,13 @@ static void php_posix_semaphore_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
 // list entry identifier
 int le_posix_semaphore;
 
+// error which occured during last function call
+int last_errno;
+
 PHP_MINIT_FUNCTION(posix_semaphores)
 {
 	le_posix_semaphore = zend_register_list_destructors_ex(php_posix_semaphore_dtor, NULL, PHP_POSIX_SEMAPHORES_RES_NAME, module_number);
+	last_errno = 0;
 	return SUCCESS;
 }
 
@@ -95,7 +103,7 @@ PHP_FUNCTION(posix_sem_open)
 	sem_t* sem = sem_open(name, flags, mode, value);
 	if (sem == SEM_FAILED)
 	{
-		printf("sem_open failed, errno = %d flags = %d O_CREAT = %d", errno, flags, O_CREAT);
+		last_errno = errno;
 		RETURN_NULL();
 	}
 	php_posix_semaphore *semaphore = emalloc(sizeof(php_posix_semaphore));
@@ -117,6 +125,7 @@ PHP_FUNCTION(posix_sem_close)
 	{
 		if (sem_close(semaphore->sem) == -1)
 		{
+		    last_errno = errno;
 		    RETURN_FALSE;
 		}
 		semaphore->sem = NULL;
@@ -135,7 +144,8 @@ PHP_FUNCTION(posix_sem_unlink)
 	}
 	if (sem_unlink(name) == -1)
 	{
-	    RETURN_FALSE;
+		last_errno = errno;
+		RETURN_FALSE;
 	}
 	RETURN_TRUE;
 }
@@ -155,6 +165,7 @@ PHP_FUNCTION(posix_sem_getvalue)
 		int value;
 		if (sem_getvalue(semaphore->sem, &value) == -1)
 		{
+			last_errno = errno;
 			RETURN_NULL();
 		}
 		else
@@ -182,6 +193,7 @@ PHP_FUNCTION(posix_sem_post)
 	{
 		if (sem_post(semaphore->sem) == -1)
 		{
+			last_errno = errno;
 			RETURN_FALSE;
 		}
 		else
@@ -209,6 +221,7 @@ PHP_FUNCTION(posix_sem_wait)
 	{
 		if (sem_wait(semaphore->sem) == -1)
 		{
+			last_errno = errno;
 			RETURN_FALSE;
 		}
 		else
@@ -222,3 +235,69 @@ PHP_FUNCTION(posix_sem_wait)
 	}
 }
 
+PHP_FUNCTION(posix_sem_trywait)
+{
+	php_posix_semaphore *semaphore;
+	zval *zsemaphore;
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zsemaphore) == FAILURE)
+	{
+		RETURN_FALSE;
+	}
+	
+	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	if (semaphore->sem)
+	{
+		if (sem_trywait(semaphore->sem) == -1)
+		{
+			last_errno = errno;
+			RETURN_FALSE;
+		}
+		else
+		{
+			RETURN_TRUE;
+		}
+	}
+	else
+	{
+		RETURN_FALSE;
+	}
+}
+
+PHP_FUNCTION(posix_sem_timedwait)
+{
+	php_posix_semaphore *semaphore;
+	zval *zsemaphore;
+	long timeout_sec;
+	long timeout_nsec = 0;
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl|l", &zsemaphore, &timeout_sec, &timeout_nsec) == FAILURE)
+	{
+		RETURN_FALSE;
+	}
+	
+	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	if (semaphore->sem)
+	{
+		struct timespec tm;
+		tm.tv_sec = (int)timeout_sec;
+		tm.tv_nsec = (int)timeout_nsec;
+		if (sem_timedwait(semaphore->sem, &tm) == -1)
+		{
+			last_errno = errno;
+			RETURN_FALSE;
+		}
+		else
+		{
+			RETURN_TRUE;
+		}
+	}
+	else
+	{
+		RETURN_FALSE;
+	}
+}
+
+
+PHP_FUNCTION(posix_sem_error)
+{
+	RETURN_LONG(last_errno);
+}
