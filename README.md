@@ -69,10 +69,64 @@ Returns `true` on success, `false` otherwise.
 
 ### posix_sem_post($semaphore)
 
+Unlocks semaphore. If the semaphore's value consequently becomes greater than zero, then
+another process or thread blocked in a sem_wait call will be woken
+up and proceed to lock the semaphore.
+
+Parameters:
+* $semaphore - semaphore resource to unlock (acquired via `posix_sem_open`).
+
+Returns `true` on success, `false` otherwise.
+
+
 ### posix_sem_wait($semaphore)
+
+Locks a semaphore. If
+the semaphore's value is greater than zero, then the decrement
+proceeds, and the function returns, immediately.  If the semaphore
+currently has the value zero, then the call blocks until either it
+becomes possible to perform the decrement (i.e., the semaphore value
+rises above zero), or a signal handler interrupts the call.
+
+Parameters:
+* $semaphore - semaphore resource to unlock (acquired via `posix_sem_open`).
+
+Returns `true` on success, `false` otherwise.
+
+### posix_sem_trywait($semaphore)
+
+The same as `posix_sem_wait`, except that if the decrement
+cannot be immediately performed, then call returns an error (last error
+set to EAGAIN) instead of blocking.
+
+### posix_sem_timedwait($semaphore, $timeout_sec, $timeout_nsec = 0)
+
+Tries to lock a semaphore (as `posix_sem_wait`), but if lock could not 
+be performed in a specified timeout, returns and sets last error to ETIMEDOUT.
+
+Parameters:
+* $semaphore - semaphore resource to unlock (acquired via `posix_sem_open`).
+* $timeout_sec - part of the timeout in seconds.
+* $timeout_nsec - part of the timeout in nanoseconds.
+
+Total timeout is computed as `$timeout_sec * 1000000000 + $timeout_nsec` and is
+measured in nanoseconds.
 
 ### posix_sem_getvalue($semaphore)
 
+Gets value of specified semaphore.
+
+Parameters:
+* $semaphore - semaphore resource which value to get (acquired via `posix_sem_open`).
+
+Returns semaphore value on success and `null` on error.
+
+Please note that underlying function `sem_getvalue` can behave differently according to
+POSIX specification, so please read your OS documentation on that.
+
+### posix_sem_error()
+
+Returns value of last error occured during call of another semaphore-related function.
 
 ## Notes for PHP users
 
