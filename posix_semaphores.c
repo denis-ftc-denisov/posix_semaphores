@@ -51,7 +51,7 @@ typedef struct _php_posix_semaphore {
 } php_posix_semaphore;
 
 
-static void php_posix_semaphore_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
+static void php_posix_semaphore_dtor(zend_resource *rsrc TSRMLS_DC)
 {
 	php_posix_semaphore *s = (php_posix_semaphore*)rsrc->ptr;
 	if (s) 
@@ -92,10 +92,10 @@ PHP_MSHUTDOWN_FUNCTION(posix_semaphores)
 PHP_FUNCTION(posix_sem_open)
 {
 	char *name;
-	int name_length;
-	long flags;
-	long mode = 0666;
-	long value = 0;
+	size_t name_length;
+	zend_long flags;
+	zend_long mode = 0666;
+	zend_long value = 0;
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sl|ll", &name, &name_length, &flags, &mode, &value) == FAILURE) 
 	{
 		RETURN_NULL();
@@ -108,7 +108,7 @@ PHP_FUNCTION(posix_sem_open)
 	}
 	php_posix_semaphore *semaphore = emalloc(sizeof(php_posix_semaphore));
 	semaphore->sem = sem;
-	ZEND_REGISTER_RESOURCE(return_value, semaphore, le_posix_semaphore);
+	ZVAL_RES(return_value, zend_register_resource(semaphore, le_posix_semaphore));
 }
 
 PHP_FUNCTION(posix_sem_close)
@@ -119,8 +119,7 @@ PHP_FUNCTION(posix_sem_close)
 	{
 		RETURN_FALSE;
 	}
-	
-	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	semaphore = (php_posix_semaphore*)zend_fetch_resource(Z_RES_P(zsemaphore), PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
 	if (semaphore->sem)
 	{
 		if (sem_close(semaphore->sem) == -1)
@@ -137,7 +136,7 @@ PHP_FUNCTION(posix_sem_close)
 PHP_FUNCTION(posix_sem_unlink)
 {
 	char *name;
-	int name_length;
+	size_t name_length;
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name, &name_length) == FAILURE) 
 	{
 		RETURN_NULL();
@@ -159,7 +158,7 @@ PHP_FUNCTION(posix_sem_getvalue)
 		RETURN_NULL();
 	}
 	
-	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	semaphore = (php_posix_semaphore*)zend_fetch_resource(Z_RES_P(zsemaphore), PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
 	if (semaphore->sem)
 	{
 		int value;
@@ -188,7 +187,7 @@ PHP_FUNCTION(posix_sem_post)
 		RETURN_FALSE;
 	}
 	
-	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	semaphore = (php_posix_semaphore*)zend_fetch_resource(Z_RES_P(zsemaphore), PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
 	if (semaphore->sem)
 	{
 		if (sem_post(semaphore->sem) == -1)
@@ -216,7 +215,7 @@ PHP_FUNCTION(posix_sem_wait)
 		RETURN_FALSE;
 	}
 	
-	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	semaphore = (php_posix_semaphore*)zend_fetch_resource(Z_RES_P(zsemaphore), PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
 	if (semaphore->sem)
 	{
 		if (sem_wait(semaphore->sem) == -1)
@@ -244,7 +243,7 @@ PHP_FUNCTION(posix_sem_trywait)
 		RETURN_FALSE;
 	}
 	
-	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	semaphore = (php_posix_semaphore*)zend_fetch_resource(Z_RES_P(zsemaphore), PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
 	if (semaphore->sem)
 	{
 		if (sem_trywait(semaphore->sem) == -1)
@@ -267,14 +266,14 @@ PHP_FUNCTION(posix_sem_timedwait)
 {
 	php_posix_semaphore *semaphore;
 	zval *zsemaphore;
-	long timeout_sec;
-	long timeout_nsec = 0;
+	zend_long timeout_sec;
+	zend_long timeout_nsec = 0;
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl|l", &zsemaphore, &timeout_sec, &timeout_nsec) == FAILURE)
 	{
 		RETURN_FALSE;
 	}
 	
-	ZEND_FETCH_RESOURCE(semaphore, php_posix_semaphore*, &zsemaphore, -1, PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
+	semaphore = (php_posix_semaphore*)zend_fetch_resource(Z_RES_P(zsemaphore), PHP_POSIX_SEMAPHORES_RES_NAME, le_posix_semaphore);
 	if (semaphore->sem)
 	{
 		struct timespec tm;
