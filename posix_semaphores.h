@@ -1,8 +1,10 @@
 #ifndef POSIX_SEMAPHORES_H
 #define POSIX_SEMAPHORES_H 1
 
-#define PHP_POSIX_SEMAPHORES_VERSION "1.0"
+#define PHP_POSIX_SEMAPHORES_VERSION "1.1"
 #define PHP_POSIX_SEMAPHORES_EXTNAME "posix_semaphores"
+
+#include "posix_semaphores_arginfo.h"
 
 PHP_MINIT_FUNCTION(posix_semaphores);
 PHP_MSHUTDOWN_FUNCTION(posix_semaphores);

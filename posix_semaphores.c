@@ -11,15 +11,15 @@
 #include <fcntl.h>
 
 static zend_function_entry posix_semaphores_functions[] = {
-	PHP_FE(posix_sem_open, NULL)
-	PHP_FE(posix_sem_close, NULL)
-	PHP_FE(posix_sem_unlink, NULL)
-	PHP_FE(posix_sem_getvalue, NULL)
-	PHP_FE(posix_sem_post, NULL)
-	PHP_FE(posix_sem_wait, NULL)
-	PHP_FE(posix_sem_trywait, NULL)
-	PHP_FE(posix_sem_timedwait, NULL)
-	PHP_FE(posix_sem_error, NULL)
+	PHP_FE(posix_sem_open, arginfo_posix_sem_open)
+	PHP_FE(posix_sem_close, arginfo_posix_sem_close)
+	PHP_FE(posix_sem_unlink, arginfo_posix_sem_unlink)
+	PHP_FE(posix_sem_getvalue, arginfo_posix_sem_getvalue)
+	PHP_FE(posix_sem_post, arginfo_posix_sem_post)
+	PHP_FE(posix_sem_wait, arginfo_posix_sem_wait)
+	PHP_FE(posix_sem_trywait, arginfo_posix_sem_trywait)
+	PHP_FE(posix_sem_timedwait, arginfo_posix_sem_timedwait)
+	PHP_FE(posix_sem_error, arginfo_posix_sem_error)
 	{NULL, NULL, NULL}
 };
     
@@ -51,7 +51,7 @@ typedef struct _php_posix_semaphore {
 } php_posix_semaphore;
 
 
-static void php_posix_semaphore_dtor(zend_resource *rsrc TSRMLS_DC)
+static void php_posix_semaphore_dtor(zend_resource *rsrc)
 {
 	php_posix_semaphore *s = (php_posix_semaphore*)rsrc->ptr;
 	if (s) 
@@ -96,7 +96,7 @@ PHP_FUNCTION(posix_sem_open)
 	zend_long flags;
 	zend_long mode = 0666;
 	zend_long value = 0;
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sl|ll", &name, &name_length, &flags, &mode, &value) == FAILURE) 
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "sl|ll", &name, &name_length, &flags, &mode, &value) == FAILURE) 
 	{
 		RETURN_NULL();
 	}
@@ -115,7 +115,7 @@ PHP_FUNCTION(posix_sem_close)
 {
 	php_posix_semaphore *semaphore;
 	zval *zsemaphore;
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zsemaphore) == FAILURE)
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zsemaphore) == FAILURE)
 	{
 		RETURN_FALSE;
 	}
@@ -137,7 +137,7 @@ PHP_FUNCTION(posix_sem_unlink)
 {
 	char *name;
 	size_t name_length;
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &name, &name_length) == FAILURE) 
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &name, &name_length) == FAILURE) 
 	{
 		RETURN_NULL();
 	}
@@ -153,7 +153,7 @@ PHP_FUNCTION(posix_sem_getvalue)
 {
 	php_posix_semaphore *semaphore;
 	zval *zsemaphore;
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zsemaphore) == FAILURE)
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zsemaphore) == FAILURE)
 	{
 		RETURN_NULL();
 	}
@@ -182,7 +182,7 @@ PHP_FUNCTION(posix_sem_post)
 {
 	php_posix_semaphore *semaphore;
 	zval *zsemaphore;
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zsemaphore) == FAILURE)
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zsemaphore) == FAILURE)
 	{
 		RETURN_FALSE;
 	}
@@ -210,7 +210,7 @@ PHP_FUNCTION(posix_sem_wait)
 {
 	php_posix_semaphore *semaphore;
 	zval *zsemaphore;
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zsemaphore) == FAILURE)
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zsemaphore) == FAILURE)
 	{
 		RETURN_FALSE;
 	}
@@ -238,7 +238,7 @@ PHP_FUNCTION(posix_sem_trywait)
 {
 	php_posix_semaphore *semaphore;
 	zval *zsemaphore;
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "r", &zsemaphore) == FAILURE)
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "r", &zsemaphore) == FAILURE)
 	{
 		RETURN_FALSE;
 	}
@@ -268,7 +268,7 @@ PHP_FUNCTION(posix_sem_timedwait)
 	zval *zsemaphore;
 	zend_long timeout_sec;
 	zend_long timeout_nsec = 0;
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "rl|l", &zsemaphore, &timeout_sec, &timeout_nsec) == FAILURE)
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "rl|l", &zsemaphore, &timeout_sec, &timeout_nsec) == FAILURE)
 	{
 		RETURN_FALSE;
 	}
